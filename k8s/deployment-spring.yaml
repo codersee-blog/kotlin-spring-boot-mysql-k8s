@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-boot-deployment
+  labels:
+    app: spring-boot-mysql
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: spring-boot-mysql
+  template:
+    metadata:
+      labels:
+        app: spring-boot-mysql
+    spec:
+      containers:
+        - image: spring-boot:0.0.1
+          name: spring-boot-container
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              port: 8080
+              path: /api/status
+            initialDelaySeconds: 10
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              port: 8080
+              path: /api/status
+            initialDelaySeconds: 10
+            failureThreshold: 5
+          env:
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: database-name
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: user-username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: user-password
